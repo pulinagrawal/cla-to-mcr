@@ -35,8 +35,7 @@ def addMCR(mcr1,mcr2,r):
 
 def convertCLAtoMCR(vector,conversionSet,r):
 	mcrVector=list()
-	sp_vector=sparsify(vector)
-	mcrVector=conversionSet[sp_vector[0]]
+	sp_vector=sparsify(vector) mcrVector=conversionSet[sp_vector[0]]
 	for i in range(1,len(sp_vector)):
 		mcrVector=addMCR(mcrVector,conversionSet[i],r)
 	return mcrVector
