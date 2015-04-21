@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import random
+import statistics
 import sys
 import copy
 import math
@@ -79,30 +80,42 @@ def main(nV):
         mcrV.append(convertCLAtoMCR(claV[i],convSet,r))
     
     avg_CLA_dist=0
+    CLA_dist=list()
     avg_MCR_dist=0
+    MCR_dist=list()
     avg_CLA_noisy_dist=0
+    CLA_noisy_dist=list()
     avg_MCR_noisy_dist=0
+    MCR_noisy_dist=list()
     
     for i in range(0,number_of_vectors):
         for j in range(i+1,number_of_vectors):
-            avg_CLA_dist+=distance(claV[i],claV[j],[0,1])
-            avg_MCR_dist+=distance(mcrV[i],mcrV[j],r)
+            CLA_dist.append(distance(claV[i],claV[j],[0,1]))
+            MCR_dist.append(distance(mcrV[i],mcrV[j],r))
     
-    combinations=(number_of_vectors*(number_of_vectors-1))/2
-    avg_CLA_dist/=combinations
-    avg_MCR_dist/=combinations
-
     for i in range(0,number_of_vectors):
     	    noisyV=addNoise(claV[i],noise)
-            avg_CLA_noisy_dist+=distance(claV[i],noisyV,[0,1])
-            avg_MCR_noisy_dist+=distance(mcrV[i],convertCLAtoMCR(noisyV,convSet,r),r)
+            CLA_noisy_dist.append(distance(claV[i],noisyV,[0,1]))
+            MCR_noisy_dist.append(distance(mcrV[i],convertCLAtoMCR(noisyV,convSet,r),r))
 
-    avg_MCR_noisy_dist/=number_of_vectors 
-    avg_CLA_noisy_dist/=number_of_vectors 
+    avg_CLA_dist=statistics.mean(CLA_dist)
+    avg_MCR_dist=statistics.mean(MCR_dist)
+    avg_MCR_noisy_dist=statistics.mean(MCR_noisy_dist)
+    avg_CLA_noisy_dist=statistics.mean(CLA_noisy_dist)
 
     print "Average CLA Distance="+str(avg_CLA_dist) #average distance of combination of all points(CLA vectors) in CLA space
-
     print "Average MCR Distance="+str(avg_MCR_dist) #average distance of combination of all points(MCR vectors) in MCR space
     print "Average CLA Distance in "+str(noise)+" noisy CLA="+str(avg_CLA_noisy_dist) #average distance between MCR projection of CLA vector and its noisy version
     print "Average MCR Distance from "+str(noise)+" noisy CLA="+str(avg_MCR_noisy_dist) #average distance between MCR projection of CLA vector and its noisy version
+
+    sdv_CLA_dist=statistics.mean(CLA_dist)
+    sdv_MCR_dist=statistics.mean(MCR_dist)
+    sdv_MCR_noisy_dist=statistics.mean(MCR_noisy_dist)
+    sdv_CLA_noisy_dist=statistics.mean(CLA_noisy_dist)
+
+    print "Standard Deviation CLA Distance="+str(sdv_CLA_dist) #std dev distance of combination of all points(CLA vectors) in CLA space
+    print "Standard Deviation MCR Distance="+str(sdv_MCR_dist) #std dev distance of combination of all points(MCR vectors) in MCR space
+    print "Standard Deviation CLA Distance in "+str(noise)+" noisy CLA="+str(sdv_CLA_noisy_dist) #std dev distance between MCR projection of CLA vector and its noisy version
+    print "Standard Deviation MCR Distance from "+str(noise)+" noisy CLA="+str(sdv_MCR_noisy_dist) #std dev distance between MCR projection of CLA vector and its noisy version
+
     return
