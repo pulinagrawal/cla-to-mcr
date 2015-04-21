@@ -43,7 +43,7 @@ def convertCLAtoMCR(vector,conversionSet,r):
     sp_vector=sparsify(vector)
     mcrVector=conversionSet[sp_vector[0]]
     for i in range(1,len(sp_vector)):
-        mcrVector=addMCR(mcrVector,conversionSet[i],r)
+        mcrVector=addMCR(mcrVector,conversionSet[sp_vector[i]],r)
     return mcrVector
 
 def distance(vector1,vector2,r):
@@ -89,10 +89,17 @@ def main(nV):
     avg_MCR_noisy_dist=0
     MCR_noisy_dist=list()
     
+    flag=True
     for i in range(0,number_of_vectors):
         for j in range(i+1,number_of_vectors):
             CLA_dist.append(distance(claV[i],claV[j],[0,1]))
             MCR_dist.append(distance(mcrV[i],mcrV[j],r))
+            if distance(mcrV[i],mcrV[j],r)==0 and flag:
+                flag=False
+                print(claV[i])
+                print(claV[j])
+                print(mcrV[i])
+                print(mcrV[j])
     
     for i in range(0,number_of_vectors):
         noisyV=addNoise(claV[i],noise)
