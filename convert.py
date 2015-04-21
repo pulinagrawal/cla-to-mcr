@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import random
+import csv
 import statistics
 import sys
 import copy
@@ -98,11 +99,20 @@ def main(nV):
         CLA_noisy_dist.append(distance(claV[i],noisyV,[0,1]))
         MCR_noisy_dist.append(distance(mcrV[i],convertCLAtoMCR(noisyV,convSet,r),r))
 
+    f = open('dist_datapoints','w')
+    csvwriter=csv.writer(f)
+    csvwriter.writerow(CLA_dist)
+    csvwriter.writerow(MCR_dist)
+    csvwriter.writerow(CLA_noisy_dist)
+    csvwriter.writerow(MCR_noisy_dist)
+    f.close()
+
     avg_CLA_dist=statistics.mean(CLA_dist)
     avg_MCR_dist=statistics.mean(MCR_dist)
     avg_MCR_noisy_dist=statistics.mean(MCR_noisy_dist)
     avg_CLA_noisy_dist=statistics.mean(CLA_noisy_dist)
 
+    print ("Vectors used="+str(nV))
     print ("Average CLA Distance="+str(avg_CLA_dist) )#average distance of combination of all points(CLA vectors) in CLA space
     print ("Average MCR Distance="+str(avg_MCR_dist) )#average distance of combination of all points(MCR vectors) in MCR space
     print ("Average CLA Distance in "+str(noise)+" noisy CLA="+str(avg_CLA_noisy_dist) )#average distance between MCR projection of CLA vector and its noisy version
