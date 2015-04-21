@@ -32,19 +32,34 @@ def generateConversionSet(number,size,r):
             conversionSet[j].append(random.randint(r[0],r[1]))
     return conversionSet
 
-def addMCR(mcr1,mcr2,r):
+def multiplyMCR(mcr1,mcr2,r):
     mcrR=list()
     for i in range(0,len(mcr1)):
         mcrR.append((mcr1[i]+mcr2[i])%(r[1]-r[0]+1)) #does not account for ranges with negative integers 
     return mcrR
 
+def addMCR(mcrs,r):
+    mcrR=list()
+    for j in range(0,len(mcrs[0])):
+        mcrR.append(0)
+        for i in range(0,len(mcrs)):
+            mcrR[j]+=mcrs[i][j]
+        mcrR[j]=int(mcrR[j]/len(mcrs))
+        mcrR[j]%=r[1]-r[0]+1
+    return mcrR
+
+
 def convertCLAtoMCR(vector,conversionSet,r):
     mcrVector=list()
     sp_vector=sparsify(vector)
-    mcrVector=conversionSet[sp_vector[0]]
-    for i in range(1,len(sp_vector)):
-        mcrVector=addMCR(mcrVector,conversionSet[sp_vector[i]],r)
-    return mcrVector
+    selConvSet=[ conversionSet[i] for i in sp_vector ]
+    return addMCR(selConvSet,r)
+    '''... This was previous implementation
+        mcrVector=conversionSet[sp_vector[0]]
+        for i in range(1,len(sp_vector)):
+            mcrVector=addMCR(mcrVector,conversionSet[sp_vector[i]],r)
+        return mcrVector
+    ...'''
 
 def distance(vector1,vector2,r):
     distance=0
@@ -94,12 +109,14 @@ def main(nV):
         for j in range(i+1,number_of_vectors):
             CLA_dist.append(distance(claV[i],claV[j],[0,1]))
             MCR_dist.append(distance(mcrV[i],mcrV[j],r))
+            ...
             if distance(mcrV[i],mcrV[j],r)==0 and flag:
                 flag=False
                 print(claV[i])
                 print(claV[j])
                 print(mcrV[i])
                 print(mcrV[j])
+            ...
     
     for i in range(0,number_of_vectors):
         noisyV=addNoise(claV[i],noise)
