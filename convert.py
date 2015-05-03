@@ -7,9 +7,9 @@ import sys
 import copy
 import math
 
-def generateCLAVector(number,size):
-    sample_vector=[1]*int(.02*size)+[0]*(size-int(.02*size))
-    vector=[[1]*int(.02*size)+[0]*(size-int(.02*size))]*number
+def generateCLAVector(number,size,sparseness):
+    sample_vector=[1]*int(sparseness*size)+[0]*(size-int(sparseness*size))
+    vector=[[1]*int(sparseness*size)+[0]*(size-int(sparseness*size))]*number
     for j in range(0,number):
         vector[j]=sample_vector[:]
         random.shuffle(vector[j])
@@ -38,18 +38,45 @@ def multiplyMCR(mcr1,mcr2,r):
         mcrR.append((mcr1[i]+mcr2[i])%(r[1]-r[0]+1)) #does not account for ranges with negative integers 
     return mcrR
 
+def inverseMCR(mcr,r):
+    mcrR=list()
+    for i in range(0,len(mcr)):
+            mcrR.append((r[1]+1-mcr[i])%r[1]-r[0]+1)
+    return mcrR
+
+def sumTable(r):
+        circAngle=2*(22/7)
+        delTheta=circAngle/(r[1]-r[0]+1)
+        table=list()
+        for i in range(0,r[1]-r[0]+1):
+                table.append(list())
+                for j in range(0,r[1]-r[0]+1):
+                    x=math.sin(i*delTheta)+math.sin(j*delTheta)
+                    y=math.cos(i*delTheta)+math.cos(j*delTheta)
+                    if x==0 :
+                            table[i].append(1)
+                    else:
+                            table[i].append( math.atan(y/x))
+        return table
+
+def vectorSum(a,b,table,r):
+        circAngle=2*(22/7)
+        delTheta=circAngle/(r[1]-r[0]+1)
+        add=round(table[a][b]/delTheta)
+        return add
+
 def addMCR(mcrs,r):
     mcrR=list()
     for j in range(0,len(mcrs[0])):
         mcrR.append(0)
         for i in range(0,len(mcrs)):
             mcrR[j]+=mcrs[i][j]
+            mcrR[j]%=r[1]-r[0]+1
         mcrR[j]=int(mcrR[j]/len(mcrs))
-        mcrR[j]%=r[1]-r[0]+1
     return mcrR
 
 
-def convertCLAtoMCR(vector,conversionSet,r):
+def convertCLAtoMCR(vector,conversionSet,r,indexSet):
     mcrVector=list()
     sp_vector=sparsify(vector)
     selConvSet=[ conversionSet[i] for i in sp_vector ]
@@ -79,49 +106,46 @@ def addNoise(vector,pct):
         noisy[i]^=1 # there are many ways to flip 1->0 and 0->1 like var=not var, var = (0,1)[var], var=1-var
    return noisy
 
-def main(nV):
+def main(nV,sparseness,noise):
     number_of_vectors=nV
     dimension_of_cla_vectors=1024
     dimension_of_mcr_vectors=1024
     r=[0,15]
-    noise=.1
-
     mcrV=list()
-    claV=generateCLAVector(number_of_vectors,dimension_of_cla_vectors)
+
+    claV=generateCLAVector(number_of_vectors,dimension_of_cla_vectors,sparseness)
     print( distance(claV[0],claV[1],[0,1]))
+
     convSet=generateConversionSet(dimension_of_cla_vectors,dimension_of_mcr_vectors,r)
-    
-    print (distance(convertCLAtoMCR(claV[0],convSet,r),convertCLAtoMCR(claV[1],convSet,r),r))
+    idxSet=generateConversionSet(dimension_of_cla_vectors,dimension_of_cla_vectors,r)
+    print (distance(convertCLAtoMCR(claV[0],convSet,r,idxSet),convertCLAtoMCR(claV[1],convSet,r,idxSet),r))
+
     for i in range(0,number_of_vectors):
-        mcrV.append(convertCLAtoMCR(claV[i],convSet,r))
+        mcrV.append(convertCLAtoMCR(claV[i],convSet,r,idxSet))
     
-    avg_CLA_dist=0
     CLA_dist=list()
-    avg_MCR_dist=0
     MCR_dist=list()
-    avg_CLA_noisy_dist=0
+    random_MCR_dist=list()
     CLA_noisy_dist=list()
-    avg_MCR_noisy_dist=0
     MCR_noisy_dist=list()
+
+    avg_CLA_dist=0
+    avg_MCR_dist=0
+    avg_random_MCR_dist=0
+    avg_CLA_noisy_dist=0
+    avg_MCR_noisy_dist=0
     
-    flag=True
     for i in range(0,number_of_vectors):
         for j in range(i+1,number_of_vectors):
             CLA_dist.append(distance(claV[i],claV[j],[0,1]))
             MCR_dist.append(distance(mcrV[i],mcrV[j],r))
-            ...
-            if distance(mcrV[i],mcrV[j],r)==0 and flag:
-                flag=False
-                print(claV[i])
-                print(claV[j])
-                print(mcrV[i])
-                print(mcrV[j])
-            ...
-    
+            random_MCR_dist.append(distance(convSet[i],convSet[j],r))
+
     for i in range(0,number_of_vectors):
         noisyV=addNoise(claV[i],noise)
         CLA_noisy_dist.append(distance(claV[i],noisyV,[0,1]))
-        MCR_noisy_dist.append(distance(mcrV[i],convertCLAtoMCR(noisyV,convSet,r),r))
+        MCR_noisy_dist.append(distance(mcrV[i],convertCLAtoMCR(noisyV,convSet,r,idxSet),r))
+
 
     f = open('dist_datapoints','w')
     csvwriter=csv.writer(f)
@@ -135,8 +159,10 @@ def main(nV):
     avg_MCR_dist=statistics.mean(MCR_dist)
     avg_MCR_noisy_dist=statistics.mean(MCR_noisy_dist)
     avg_CLA_noisy_dist=statistics.mean(CLA_noisy_dist)
+    avg_random_MCR_dist=statistics.mean(random_MCR_dist)
 
     print ("Vectors used="+str(nV))
+    print ("Average random MCR distance="+str(avg_random_MCR_dist) ) #average distance between any random MCR vectors
     print ("Average CLA Distance="+str(avg_CLA_dist) )#average distance of combination of all points(CLA vectors) in CLA space
     print ("Average MCR Distance="+str(avg_MCR_dist) )#average distance of combination of all points(MCR vectors) in MCR space
     print ("Average CLA Distance in "+str(noise)+" noisy CLA="+str(avg_CLA_noisy_dist) )#average distance between MCR projection of CLA vector and its noisy version
@@ -146,7 +172,9 @@ def main(nV):
     sdv_MCR_dist=statistics.stdev(MCR_dist)
     sdv_MCR_noisy_dist=statistics.stdev(MCR_noisy_dist)
     sdv_CLA_noisy_dist=statistics.stdev(CLA_noisy_dist)
+    sdv_random_MCR_dist=statistics.stdev(random_MCR_dist)
 
+    print ("Standard Deviation random MCR Distance="+str(sdv_random_MCR_dist) )#std dev distance of random MCR vectors
     print ("Standard Deviation CLA Distance="+str(sdv_CLA_dist) )#std dev distance of combijation of all points(CLA vectors) in CLA space
     print ("Standard Deviation MCR Distance="+str(sdv_MCR_dist) )#std dev distance of combination of all points(MCR vectors) in MCR space
     print ("Standard Deviation CLA Distance in "+str(noise)+" noisy CLA="+str(sdv_CLA_noisy_dist) )#std dev distance between MCR projection of CLA vector and its noisy version
