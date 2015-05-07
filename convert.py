@@ -7,6 +7,20 @@ import sys
 import copy
 import math
 
+class Vector :
+        theta=0
+        mag=0
+                circAngle=2*(22/7)
+
+        def __init__(self, val, r) :
+                self.mag=1
+                self.theta=val*delTheta
+               
+        def modValue(self, r) :
+                delTheta=circAngle/(r[1]-r[0]+1)
+                return self.theta/delTheta
+
+
 def generateCLAVector(number,size,sparseness):
     sample_vector=[1]*int(sparseness*size)+[0]*(size-int(sparseness*size))
     vector=[[1]*int(sparseness*size)+[0]*(size-int(sparseness*size))]*number
@@ -74,14 +88,18 @@ def vSum(a,b,r):
                     R=b+c
         return R
 
-def vectorSum(a,table,r):
+def vectorSum(a,table,r,isTrig):
         modular=r[1]-r[0]+1
-        #circAngle=2*(22/7)
-        #delTheta=circAngle/(r[1]-r[0]+1)
-        #add=round(table[a][b]/delTheta)
-        add=a[0]
-        for i in range(1,len(a)):
-            add=vSum(add,a[i],r)
+        if isTrig==True :
+            circAngle=2*(22/7)
+            delTheta=circAngle/(r[1]-r[0]+1)
+            add=a[0]
+            for i in range(1,len(a)):
+                add=round(table[add][a[i]]/delTheta)
+        else :
+            add=a[0]
+            for i in range(1,len(a)):
+                add=vSum(add,a[i],r)
         return round(add)%modular
 
 def addMCR(mcrs,r):

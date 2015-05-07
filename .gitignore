@@ -62,3 +62,6 @@ target/
 
 #excel
 *.xlsx
+
+#~files
+*.*~
