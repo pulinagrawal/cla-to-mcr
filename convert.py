@@ -51,28 +51,46 @@ def sumTable(r):
         for i in range(0,r[1]-r[0]+1):
                 table.append(list())
                 for j in range(0,r[1]-r[0]+1):
-                    x=math.sin(i*delTheta)+math.sin(j*delTheta)
-                    y=math.cos(i*delTheta)+math.cos(j*delTheta)
+                    y=math.sin(i*delTheta)+math.sin(j*delTheta)
+                    x=math.cos(i*delTheta)+math.cos(j*delTheta)
                     if x==0 :
                             table[i].append(1)
                     else:
-                            table[i].append( math.atan(y/x))
+                            table[i].append(math.atan(y/x))
         return table
 
-def vectorSum(a,b,table,r):
-        circAngle=2*(22/7)
-        delTheta=circAngle/(r[1]-r[0]+1)
-        add=round(table[a][b]/delTheta)
-        return add
+def vSum(a,b,r):
+        R=0
+        modular=r[1]-r[0]+1
+        hMod=modular/2
+        if a%modular>hMod and b%modular>hMod or a%modular<hMod and b%modular<hMod :
+                R=(a+b)/2
+        else :
+                if a>b :
+                    c=(modular-(a-b))/2
+                    R=a+c
+                else :
+                    c=(modular-(b-a))/2
+                    R=b+c
+        return R
+
+def vectorSum(a,table,r):
+        modular=r[1]-r[0]+1
+        #circAngle=2*(22/7)
+        #delTheta=circAngle/(r[1]-r[0]+1)
+        #add=round(table[a][b]/delTheta)
+        add=a[0]
+        for i in range(1,len(a)):
+            add=vSum(add,a[i],r)
+        return round(add)%modular
 
 def addMCR(mcrs,r):
     mcrR=list()
     for j in range(0,len(mcrs[0])):
         mcrR.append(0)
-        for i in range(0,len(mcrs)):
-            mcrR[j]+=mcrs[i][j]
-            mcrR[j]%=r[1]-r[0]+1
-        mcrR[j]=int(mcrR[j]/len(mcrs))
+        values=[ mcrs[i][j] for i in range(0,len(mcrs)) ]
+        table=[1]
+        mcrR[j]= vectorSum(values,table,r)
     return mcrR
 
 
