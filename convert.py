@@ -128,7 +128,7 @@ def addMCR(mcrs,r):
         mcrR.append(0)
         values=[ mcrs[i][j] for i in range(0,len(mcrs)) ]
         table=[1]
-        mcrR[j]= vectorSum(values,table,r)
+        mcrR[j]= vectorSum(values,table,r,True)
     return mcrR
 
 
