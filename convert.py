@@ -10,7 +10,7 @@ import math
 class Vector :
         theta=0
         mag=0
-                circAngle=2*(22/7)
+        circAngle=2*(22/7)
 
         def __init__(self, val, r) :
                 self.mag=1
@@ -20,6 +20,23 @@ class Vector :
                 delTheta=circAngle/(r[1]-r[0]+1)
                 return self.theta/delTheta
 
+        def setVector(self, val, r) :
+                self.mag=1
+                self.theta=val*delTheta
+
+        def setVector(self, val, mag, r) :
+                self.mag=mag
+                self.theta=val*delTheta
+
+        def addVector(self, Vector) :
+                R= Vector()
+                y=Vector.mag*math.sin(Vector.theta)+self.mag*math.sin(self.theta)
+                x=Vector.mag*math.cos(Vector.theta)+self.mag*math.cos(self.theta)
+                if x==0 :
+                        R.theta=circAngle/4
+                else:
+                        R.theta=math.atan(y/x)
+                
 
 def generateCLAVector(number,size,sparseness):
     sample_vector=[1]*int(sparseness*size)+[0]*(size-int(sparseness*size))
@@ -68,7 +85,10 @@ def sumTable(r):
                     y=math.sin(i*delTheta)+math.sin(j*delTheta)
                     x=math.cos(i*delTheta)+math.cos(j*delTheta)
                     if x==0 :
-                            table[i].append(1)
+                            if y>0 :
+                                table[i].append(circAngle/4)
+                            else :
+                                table[i].append(circAngle*3/4)
                     else:
                             table[i].append(math.atan(y/x))
         return table
