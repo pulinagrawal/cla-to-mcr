@@ -124,10 +124,10 @@ def vectorSum(a,table,r,isTrig):
 
 def addMCR(mcrs,r):
     mcrR=list()
+    table=sumTable(r)
     for j in range(0,len(mcrs[0])):
         mcrR.append(0)
         values=[ mcrs[i][j] for i in range(0,len(mcrs)) ]
-        table=[1]
         mcrR[j]= vectorSum(values,table,r,True)
     return mcrR
 
