@@ -10,32 +10,44 @@ import math
 class Vector :
         theta=0
         mag=0
-        circAngle=2*(22/7)
 
         def __init__(self, val, r) :
+                circAngle=2*(22/7)
+                delTheta=circAngle/(r[1]-r[0]+1)
                 self.mag=1
                 self.theta=val*delTheta
                
         def modValue(self, r) :
+                circAngle=2*(22/7)
                 delTheta=circAngle/(r[1]-r[0]+1)
                 return self.theta/delTheta
 
         def setVector(self, val, r) :
+                circAngle=2*(22/7)
+                delTheta=circAngle/(r[1]-r[0]+1)
                 self.mag=1
                 self.theta=val*delTheta
 
         def setVector(self, val, mag, r) :
+                circAngle=2*(22/7)
+                delTheta=circAngle/(r[1]-r[0]+1)
                 self.mag=mag
                 self.theta=val*delTheta
 
-        def addVector(self, Vector) :
-                R= Vector()
-                y=Vector.mag*math.sin(Vector.theta)+self.mag*math.sin(self.theta)
-                x=Vector.mag*math.cos(Vector.theta)+self.mag*math.cos(self.theta)
+        def addVector(self,v) :
+                circAngle=2*(22/7)
+                R= Vector(0, [0,15])
+                y=v.mag*math.sin(v.theta)+self.mag*math.sin(self.theta)
+                x=v.mag*math.cos(v.theta)+self.mag*math.cos(self.theta)
                 if x==0 :
-                        R.theta=circAngle/4
+                            if y>0 :
+                                R.theta=(circAngle/4)
+                            else :
+                                R.theta=(circAngle*3/4)
                 else:
                         R.theta=math.atan(y/x)
+                R.mag=(y**2+x**2)**0.5
+                return R
                 
 
 def generateCLAVector(number,size,sparseness):
@@ -113,14 +125,16 @@ def vectorSum(a,table,r,isTrig):
         if isTrig==True :
             circAngle=2*(22/7)
             delTheta=circAngle/(r[1]-r[0]+1)
-            add=a[0]
+            add=Vector(a[0],r)
             for i in range(1,len(a)):
-                add=round(table[add][a[i]]/delTheta)
+                v=Vector(a[i],r)
+                add=add.addVector(v)
         else :
             add=a[0]
+
             for i in range(1,len(a)):
                 add=vSum(add,a[i],r)
-        return round(add)%modular
+        return round(add.modValue(r))%modular
 
 def addMCR(mcrs,r):
     mcrR=list()
