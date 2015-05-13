@@ -19,7 +19,7 @@ class Vector :
         def modValue(self, r) :
                 circAngle=2*(22/7)
                 delTheta=circAngle/(r[1]-r[0]+1)
-                return self.theta/delTheta
+                return round(self.theta/delTheta)
 
         def setVector(self, val, r) :
                 circAngle=2*(22/7)
@@ -136,7 +136,7 @@ def vectorSum(a,table,r,isTrig):
             for i in range(1,len(a)):
                 add=vSum(add,a[i],r)
 
-        return round(add.modValue(r))%modular
+        return (add.modValue(r))%modular
 
 def addMCR(mcrs,r):
     mcrR=list()
@@ -177,6 +177,10 @@ def addNoise(vector,pct):
    for i in selected:
         noisy[i]^=1 # there are many ways to flip 1->0 and 0->1 like var=not var, var = (0,1)[var], var=1-var
    return noisy
+
+def analyzeAddition(vectors,r,times):
+        #TODO add definition
+        return
 
 def main(nV,sparseness,noise):
     number_of_vectors=nV
