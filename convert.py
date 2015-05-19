@@ -42,7 +42,14 @@ class Vector :
                         else :
                                 R.theta=(circAngle*3/4)
                 else:
-                        R.theta=math.atan(y/x)
+                        R.theta=math.atan(abs(y/x))
+
+                if y<0 and x>0 :
+                        R.theta=circAngle-R.theta
+                elif y<0 and x<0 :
+                        R.theta=circAngle/2+R.theta
+                elif y>0 and x<0 :
+                        R.theta=circAngle/2-R.theta
 
                 if x==0 and y==0 :
                         #insert the chance logic
