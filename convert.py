@@ -1,3 +1,4 @@
+# This file converts cla vectors to mcr vectors
 #!/usr/bin/python
 import random
 import csv
