@@ -1,5 +1,6 @@
 # This file converts cla vectors to mcr vectors
 # By Pulin Agrawal
+# following line indicates that it is a python script
 #!/usr/bin/python
 import random
 import csv
