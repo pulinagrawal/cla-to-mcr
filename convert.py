@@ -1,4 +1,5 @@
 # This file converts cla vectors to mcr vectors
+# Using the random projection like method
 # By Pulin Agrawal
 # following line indicates that it is a python script
 #!/usr/bin/python
