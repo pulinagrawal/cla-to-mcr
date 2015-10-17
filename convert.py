@@ -2,6 +2,7 @@
 # Using the random projection like method
 # By Pulin Agrawal
 # following line indicates that it is a python script
+# this is a comment
 #!/usr/bin/python
 import random
 import csv
