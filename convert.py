@@ -268,3 +268,4 @@ def main(nV,sparseness,noise):
     print ("Standard Deviation CLA Distance in "+str(noise)+" noisy CLA="+str(sdv_CLA_noisy_dist) )#std dev distance between MCR projection of CLA vector and its noisy version
     print ("Standard Deviation MCR Distance from "+str(noise)+" noisy CLA="+str(sdv_MCR_noisy_dist)) #std dev distance between MCR projection of CLA vector and its noisy version
     return
+# Probing can be used to probe if the given MCR vector has some set of Projection MCR vector vectors. by placing 1's on the positions of those vectors we can retrieve the CLA vector.
