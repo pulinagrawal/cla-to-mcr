@@ -273,3 +273,4 @@ def main(nV,sparseness,noise):
             
 
     return
+# Probing can be used to probe if the given MCR vector has some set of Projection MCR vector vectors. by placing 1's on the positions of those vectors we can retrieve the CLA vector.
