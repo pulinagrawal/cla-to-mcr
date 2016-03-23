@@ -267,4 +267,9 @@ def main(nV,sparseness,noise):
     print ("Standard Deviation MCR Distance="+str(sdv_MCR_dist) )#std dev distance of combination of all points(MCR vectors) in MCR space
     print ("Standard Deviation CLA Distance in "+str(noise)+" noisy CLA="+str(sdv_CLA_noisy_dist) )#std dev distance between MCR projection of CLA vector and its noisy version
     print ("Standard Deviation MCR Distance from "+str(noise)+" noisy CLA="+str(sdv_MCR_noisy_dist)) #std dev distance between MCR projection of CLA vector and its noisy version
+
+    for i in range(0,number_of_vectors)
+        for j in range(0,dimension_of_mcr_vectors)
+            
+
     return
