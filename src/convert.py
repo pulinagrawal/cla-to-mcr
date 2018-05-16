@@ -5,63 +5,12 @@
 # this is a comment
 #!/usr/bin/python
 import random
+import numpy as statistics
 import csv
-import statistics
 import sys
 import copy
 import math
 
-class Vector :
-        theta=0
-        mag=0
-
-        def __init__(self, val, r) :
-                circAngle=2*(22/7)
-                delTheta=circAngle/(r[1]-r[0]+1)
-                self.mag=1
-                self.theta=val*delTheta
-               
-        def modValue(self, r) :
-                circAngle=2*(22/7)
-                delTheta=circAngle/(r[1]-r[0]+1)
-                return round(self.theta/delTheta)
-
-        def setVector(self, val, r) :
-                circAngle=2*(22/7)
-                delTheta=circAngle/(r[1]-r[0]+1)
-                self.mag=1
-                self.theta=val*delTheta
-
-        def setVector(self, val, mag, r) :
-                self.mag=mag
-                self.theta=val*delTheta
-
-        def addVector(self,v) :
-                circAngle=2*(22/7)
-                R= Vector(0, [0,15])
-                y=v.mag*math.sin(v.theta)+self.mag*math.sin(self.theta)
-                x=v.mag*math.cos(v.theta)+self.mag*math.cos(self.theta)
-                if x==0 :
-                        if y>0 :
-                                R.theta=(circAngle/4)
-                        else :
-                                R.theta=(circAngle*3/4)
-                else:
-                        R.theta=math.atan(abs(y/x))
-
-                if y<0 and x>0 :
-                        R.theta=circAngle-R.theta
-                elif y<0 and x<0 :
-                        R.theta=circAngle/2+R.theta
-                elif y>0 and x<0 :
-                        R.theta=circAngle/2-R.theta
-
-                if x==0 and y==0 :
-                        #insert the chance logic
-                        R.theta=self.theta+circAngle/4
-
-                R.mag=(y**2+x**2)**0.5
-                return R
                 
 
 def generateCLAVector(number,size,sparseness):
@@ -79,7 +28,7 @@ def sparsify(vector):
             sparse_vector.append(i)
     return sparse_vector
 
-def generateConversionSet(number,size,r):
+def generateConversionSet(number,size,r=[0, 15]):
     #number - number of mcr vectors = dimensions in cla vector
     #size - length of each mcr vector = dimensionality of mcr space
     conversionSet=list()
@@ -137,8 +86,6 @@ def vSum(a,b,r):
 def vectorSum(a,table,r,isTrig):
         modular=r[1]-r[0]+1
         if isTrig==True :
-            circAngle=2*(22/7)
-            delTheta=circAngle/(r[1]-r[0]+1)
             add=Vector(a[0],r)
             for i in range(1,len(a)):
                 v=Vector(a[i],r)
@@ -182,7 +129,7 @@ def distance(vector1,vector2,r):
 def addNoise(vector,pct):
    ones_index=sparsify(vector)
    selected=random.sample(ones_index,int(pct*len(ones_index)))
-   zeroes_index=[ range(0,len(vector))[i] for i in range(0,len(vector)) if i not in ones_index]
+   zeroes_index=[ i for i in range(0,len(vector)) if i not in ones_index]
    selected_zeroes=random.sample(zeroes_index,int(pct*len(ones_index)))
    selected.extend(selected_zeroes)
    noisy=vector[:]
@@ -268,9 +215,10 @@ def main(nV,sparseness,noise):
     print ("Standard Deviation CLA Distance in "+str(noise)+" noisy CLA="+str(sdv_CLA_noisy_dist) )#std dev distance between MCR projection of CLA vector and its noisy version
     print ("Standard Deviation MCR Distance from "+str(noise)+" noisy CLA="+str(sdv_MCR_noisy_dist)) #std dev distance between MCR projection of CLA vector and its noisy version
 
-    for i in range(0,number_of_vectors)
-        for j in range(0,dimension_of_mcr_vectors)
-            
 
     return
 # Probing can be used to probe if the given MCR vector has some set of Projection MCR vector vectors. by placing 1's on the positions of those vectors we can retrieve the CLA vector.
+
+if __name__ == '__main__':
+
+    main(100, .02, [0, 15])
