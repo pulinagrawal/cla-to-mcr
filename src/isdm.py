@@ -86,6 +86,9 @@ class MCRVector(object):
         _dims = np.random.random_integers(r_min, r_max, ndim)
         return cls(_dims, factor=factor, _mag=_mag)
 
+    def __str__(self):
+        return str(self._dims)
+
     def __len__(self):
         return len(self._dims)
 
@@ -332,7 +335,6 @@ class NPIntegerSDM(IntegerSDM):
         locations = np.where(in_radius)
         return [self.hard_locations[location] for location in locations[0]]
 
-
 class TFIntegerSDM(IntegerSDM):
 
     import tensorflow as tf
@@ -362,9 +364,21 @@ class TFIntegerSDM(IntegerSDM):
                                                                            self._query_radius: radius})
         return [self.hard_locations[location_index[0]] for location_index in locations]
 
+pam = IntegerSDM(100000)
 
-if __name__ == '__main__':
-    pam = IntegerSDM(100000)
+def create():
+    v = MCRVector.random_vector()
+    pam.write(v)
+    return v
+
+def analogy(a1, a2, b1):
+    concept = a1*(~a2)
+    concept = pam.read(concept)
+    term = b1*(~concept)
+    term = pam.read(term)
+    return term, concept
+
+def example1():
     cake = MCRVector.random_vector()
     ram = MCRVector.random_vector()
     apple = MCRVector.random_vector()
@@ -389,3 +403,27 @@ if __name__ == '__main__':
     print(v1.distance(cake))
     print(v1.distance(sita))
     print(cake.distance(sita))
+
+if __name__ == '__main__':
+    thanos = create()
+    scarlett_witch = create()
+    luke = create()
+    sith = create()
+    villian = create()
+
+    vocab = {'thanos': create(),
+             'scarlett_witch': create(),
+             'luke': create(),
+             'sith': create(),
+             'villian': create(),
+             'hero': create()
+             }
+
+    vocab['star_wars'] = vocab['luke']*vocab['hero']+ vocab['sith']*vocab['villian']
+    vocab['avengers'] = vocab['scarlett_witch']*vocab['hero']+ vocab['thanos']*vocab['villian']
+
+    term = analogy(vocab['avengers'], vocab['scarlett_witch'], vocab['star_wars'])
+
+
+
+
