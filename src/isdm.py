@@ -174,9 +174,10 @@ class MCRVector(object):
 
     def __add__(self, other):
         # Optimization to prevent a lot of multiplications because _factor is mostly 1
-        new_group = self._group_list.copy()
-        new_group.append(self)
-        new_group.append(other)
+        #This solution may make add to work but MCR can only loose its group after binding/mul
+        new_group = []
+        new_group.extend(self)
+        new_group.extend(other)
         result = MCRVector(np.array(MCRVector._addMCR(new_group)), group_list=new_group)
         return result
 
