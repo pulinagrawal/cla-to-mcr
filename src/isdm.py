@@ -5,15 +5,20 @@ import pickle
 import os
 import numpy as np
 import pylru as lru
+
+
 r = (0, 15)
+ndim = 1000
+memory_location = 'pam'
+
+
 _axis_length = r[1]-r[0]+1
 r_max = r[1]
 r_min = r[0]
 TWO_PI = 2*pi
-del_theta = TWO_PI/_axis_length
-ndim = 1000
-memory_location = 'pam'
+delta_theta = TWO_PI / _axis_length
 same_vector_distance_threshold = ndim/10
+
 
 def set_modularity(new_r):
     global r, _axis_length, r_max, r_min
@@ -22,13 +27,68 @@ def set_modularity(new_r):
     r_max = r[1]
     r_min = r[0]
 
+
 def set_dimensionality(new_ndim):
     global ndim, same_vector_distance_threshold
     ndim = new_ndim
     same_vector_distance_threshold = ndim/10
 
-sin = dict([(key, np.sin(key*del_theta)) for key in range(_axis_length)])
-cos = dict([(key, np.cos(key*del_theta)) for key in range(_axis_length)])
+
+sin = dict([(key, np.sin(key * delta_theta)) for key in range(_axis_length)])
+cos = dict([(key, np.cos(key * delta_theta)) for key in range(_axis_length)])
+
+
+class Vector:
+    theta = 0
+    mag = 0
+
+    def __init__(self, val):
+        self.mag = 1
+        self.theta = val * delta_theta
+
+    @property
+    def value(self):
+        return round(self.theta / delta_theta)
+
+    def set_vector(self, val):
+        self.mag = 1
+        self.theta = val * delta_theta
+
+    def set_vector(self, val, mag):
+        self.mag = mag
+        self.theta = val * delta_theta
+
+    def __radd__(self, other):
+        if other == 0:
+            return self
+        else:
+            return self+other
+
+    def __add__(self, v):
+        resultant = Vector(0)
+        y = v.mag * sin(v.theta) + self.mag * sin(self.theta)
+        x = v.mag * cos(v.theta) + self.mag * cos(self.theta)
+        if x == 0:
+            if y > 0:
+                resultant.theta = (TWO_PI/4)
+            else:
+                resultant.theta = (TWO_PI*3/4)
+        else:
+            resultant.theta = atan(abs(y/x))
+
+        if y < 0 < x:
+            resultant.theta = TWO_PI-resultant.theta
+        elif y < 0 and x < 0:
+            resultant.theta = TWO_PI/2 + resultant.theta
+        elif y > 0 > x:
+            resultant.theta = TWO_PI/2 - resultant.theta
+
+        if x == 0 and y == 0:
+            # insert the chance logic
+            resultant.theta = self.theta + TWO_PI/4
+
+        resultant.mag = (y ** 2 + x ** 2) ** 0.5
+        return resultant
 
 
 def add_two_dimensions(value1, magnitude1, value2, magnitude2):
@@ -57,7 +117,7 @@ def add_two_dimensions(value1, magnitude1, value2, magnitude2):
 
     magnitude = (value1**2+value2**2)**.5
 
-    return round(result/del_theta) % _axis_length, magnitude
+    return round(result / delta_theta) % _axis_length, magnitude
 
 # Check add operation
 # for a, b in itertools.combinations(range(16), 2):
@@ -66,14 +126,15 @@ def add_two_dimensions(value1, magnitude1, value2, magnitude2):
 
 class MCRVector(object):
 
-    __slots__ = ['_dims', '_factor', '_magnitudes_internal']
+    __slots__ = ['_dims', '_factor', '_magnitudes_internal', '_group_list']
 
-    def __init__(self, dims, factor=1., _mag=np.array([1]*ndim)):
+    def __init__(self, dims, factor=1., _mag=np.array([1]*ndim), group_list=[]):
         if len(dims) != ndim:
             raise ValueError
         self._dims = dims
         self._factor = factor
         self._magnitudes_internal = _mag
+        self._group_list = group_list
 
     @property
     def _magnitudes(self):
@@ -102,8 +163,17 @@ class MCRVector(object):
         else:
             return MCRVector(np.apply_along_axis(lambda dim: dim % _axis_length, 0, self.dims+other.dims))
 
+    def _addMCR(mcrs):
+        mcrR = list()
+        for i in range(len(mcrs[0])):
+            mcrR.append(0)
+            values = [Vector(mcr[i]) for mcr in mcrs]
+            mcrR[i] = (sum(values)).value % _axis_length
+        return mcrR
+
     def __add__(self, other):
         # Optimization to prevent a lot of multiplications because _factor is mostly 1
+        #TODO : NEED TO ADD ALL MCRs IN GROUP_LIST using _addMCR and pass on to return object
         self_magnitudes = self._magnitudes*self.factor if self.factor != 1. else self._magnitudes
         other_magnitudes = other._magnitudes*other.factor if other.factor != 1. else other._magnitudes
 
@@ -366,18 +436,6 @@ class TFIntegerSDM(IntegerSDM):
 
 pam = IntegerSDM(100000)
 
-def create():
-    v = MCRVector.random_vector()
-    pam.write(v)
-    return v
-
-def analogy(a1, a2, b1):
-    concept = a1*(~a2)
-    concept = pam.read(concept)
-    term = b1*(~concept)
-    term = pam.read(term)
-    return term, concept
-
 def example1():
     cake = MCRVector.random_vector()
     ram = MCRVector.random_vector()
@@ -404,25 +462,30 @@ def example1():
     print(v1.distance(sita))
     print(cake.distance(sita))
 
+'''
+def analogy(a1, a2, b1):
+    concept = a1*(~a2)
+    concept = pam.read(concept)
+    term = b1*(~concept)
+    term = pam.read(term)
+    return term, concept
+'''
+
+def create():
+    v = MCRVector.random_vector()
+    pam.write(v)
+    return v
+
+
 if __name__ == '__main__':
+
     thanos = create()
     scarlett_witch = create()
     luke = create()
     sith = create()
     villian = create()
+    hero = create()
 
-    vocab = {'thanos': create(),
-             'scarlett_witch': create(),
-             'luke': create(),
-             'sith': create(),
-             'villian': create(),
-             'hero': create()
-             }
-
-    vocab['star_wars'] = vocab['luke']*vocab['hero']+ vocab['sith']*vocab['villian']
-    vocab['avengers'] = vocab['scarlett_witch']*vocab['hero']+ vocab['thanos']*vocab['villian']
-
-    term = analogy(vocab['avengers'], vocab['scarlett_witch'], vocab['star_wars'])
 
 
 
