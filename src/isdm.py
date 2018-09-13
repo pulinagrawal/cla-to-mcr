@@ -163,6 +163,7 @@ class MCRVector(object):
         else:
             return MCRVector(np.apply_along_axis(lambda dim: dim % _axis_length, 0, self.dims+other.dims))
 
+    @staticmethod
     def _addMCR(mcrs):
         mcrR = list()
         for i in range(len(mcrs[0])):
@@ -173,16 +174,12 @@ class MCRVector(object):
 
     def __add__(self, other):
         # Optimization to prevent a lot of multiplications because _factor is mostly 1
-        #TODO : NEED TO ADD ALL MCRs IN GROUP_LIST using _addMCR and pass on to return object
-        self_magnitudes = self._magnitudes*self.factor if self.factor != 1. else self._magnitudes
-        other_magnitudes = other._magnitudes*other.factor if other.factor != 1. else other._magnitudes
+        new_group = self._group_list.copy()
+        new_group.append(self)
+        new_group.append(other)
+        result = MCRVector(np.array(MCRVector._addMCR(new_group)), group_list=new_group)
+        return result
 
-        addition_result = [add_two_dimensions(*param_values) for param_values in zip(self.dims,
-                                                                                     self_magnitudes,
-                                                                                     other.dims,
-                                                                                     other_magnitudes)]
-
-        return MCRVector(np.array([i[0] for i in addition_result]), _mag=np.array([i[1] for i in addition_result]))
 
     def __getitem__(self, item):
         return self._dims[item]
