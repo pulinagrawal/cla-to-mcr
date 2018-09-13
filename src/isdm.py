@@ -39,16 +39,20 @@ cos = dict([(key, np.cos(key * delta_theta)) for key in range(_axis_length)])
 
 
 class Vector:
-    theta = 0
-    mag = 0
+
 
     def __init__(self, val):
         self.mag = 1
         self.theta = val * delta_theta
 
     @property
-    def value(self):
-        return round(self.theta / delta_theta)
+    def theta(self):
+        return self.__theta
+
+    @theta.setter
+    def theta(self, theta_value):
+        self.__theta = theta_value
+        self.value = round(theta_value/delta_theta) % _axis_length
 
     def set_vector(self, val):
         self.mag = 1
@@ -66,22 +70,22 @@ class Vector:
 
     def __add__(self, v):
         resultant = Vector(0)
-        y = v.mag * sin(v.theta) + self.mag * sin(self.theta)
-        x = v.mag * cos(v.theta) + self.mag * cos(self.theta)
+        y = v.mag * sin[v.value] + self.mag * sin[self.value]
+        x = v.mag * cos[v.value] + self.mag * cos[self.value]
         if x == 0:
             if y > 0:
-                resultant.theta = (TWO_PI/4)
+                theta = (TWO_PI/4)
             else:
-                resultant.theta = (TWO_PI*3/4)
+                theta = (TWO_PI*3/4)
         else:
-            resultant.theta = atan(abs(y/x))
+            theta = atan(abs(y/x))
 
         if y < 0 < x:
-            resultant.theta = TWO_PI-resultant.theta
+            resultant.theta = TWO_PI-theta
         elif y < 0 and x < 0:
-            resultant.theta = TWO_PI/2 + resultant.theta
+            resultant.theta = pi+theta
         elif y > 0 > x:
-            resultant.theta = TWO_PI/2 - resultant.theta
+            resultant.theta = pi-theta
 
         if x == 0 and y == 0:
             # insert the chance logic
@@ -166,21 +170,35 @@ class MCRVector(object):
     @staticmethod
     def _addMCR(mcrs):
         mcrR = list()
-        for i in range(len(mcrs[0])):
+        for i in range(np.size(mcrs[0])):
             mcrR.append(0)
             values = [Vector(mcr[i]) for mcr in mcrs]
             mcrR[i] = (sum(values)).value % _axis_length
         return mcrR
 
+    def __radd__(self, other):
+        if other == 0:
+            return self
+        else:
+            return self+other
+
     def __add__(self, other):
         # Optimization to prevent a lot of multiplications because _factor is mostly 1
         #This solution may make add to work but MCR can only loose its group after binding/mul
         new_group = []
-        new_group.extend(self)
-        new_group.extend(other)
+        if len(self._group_list) > 0:
+            new_group.extend(self._group_list)
+        else:
+            new_group.append(self)
+        if len(other._group_list) > 0:
+            new_group.extend(other._group_list)
+        else:
+            new_group.append(other)
         result = MCRVector(np.array(MCRVector._addMCR(new_group)), group_list=new_group)
         return result
 
+    def __mod__(self, other):
+        return MCRVector.distance_between(self, other)
 
     def __getitem__(self, item):
         return self._dims[item]
@@ -460,14 +478,12 @@ def example1():
     print(v1.distance(sita))
     print(cake.distance(sita))
 
-'''
 def analogy(a1, a2, b1):
     concept = a1*(~a2)
     concept = pam.read(concept)
     term = b1*(~concept)
     term = pam.read(term)
     return term, concept
-'''
 
 def create():
     v = MCRVector.random_vector()
@@ -483,6 +499,15 @@ if __name__ == '__main__':
     sith = create()
     villian = create()
     hero = create()
+
+    avengers = thanos*villian + scarlett_witch*hero
+
+    star_wars = sith*villian + luke*hero
+
+    term = analogy(avengers, thanos, star_wars)
+
+    term[0].distance(luke)
+    term[0].distance(sith)
 
 
 
