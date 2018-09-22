@@ -13,7 +13,7 @@ Possible Applications
 * Sparse PCA
 * Sparse Composite Quantization
 
-##References
+## References
 
 Snaider, J., Franklin, S., Strain, S., & George, E. O. (2013). Integer sparse distributed memory: Analysis and results. Neural Networks, 46, 144-153.
 
