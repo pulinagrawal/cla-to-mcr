@@ -1,4 +1,6 @@
-from math import pi, sin, cos, atan
+from math import pi, atan
+import warnings
+import math
 import sys
 import shutil
 import pickle
@@ -6,16 +8,29 @@ import os
 import numpy as np
 import pylru as lru
 
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = IOError
+
+try:
+    FileExistsError
+except NameError:
+    FileExistsError = IOError
+
+
 
 r = (0, 15)
-ndim = 1000
-memory_location = 'pam'
+ndim = 1024
+exp_dist = ndim*(r[1]-r[0]+1)/4
+exp_dist_std = (ndim*((((r[1]-r[0]+1)**2)+8)/48))**0.5
+memory_location = 'pam1'
 
 
 _axis_length = r[1]-r[0]+1
 r_max = r[1]
 r_min = r[0]
-TWO_PI = 2*pi
+TWO_PI = 44.0/7
 delta_theta = TWO_PI / _axis_length
 same_vector_distance_threshold = ndim/10
 
@@ -70,8 +85,8 @@ class Vector:
 
     def __add__(self, v):
         resultant = Vector(0)
-        y = v.mag * sin[v.value] + self.mag * sin[self.value]
-        x = v.mag * cos[v.value] + self.mag * cos[self.value]
+        y = v.mag * math.sin(v.theta) + self.mag * math.sin(self.theta)
+        x = v.mag * math.cos(v.theta) + self.mag * math.cos(self.theta)
         if x == 0:
             if y > 0:
                 theta = (TWO_PI/4)
@@ -81,47 +96,48 @@ class Vector:
             theta = atan(abs(y/x))
 
         if y < 0 < x:
-            resultant.theta = TWO_PI-theta
+            theta = TWO_PI-theta
         elif y < 0 and x < 0:
-            resultant.theta = pi+theta
+            theta = TWO_PI/2+theta
         elif y > 0 > x:
-            resultant.theta = pi-theta
+            theta = TWO_PI/2-theta
 
         if x == 0 and y == 0:
             # insert the chance logic
-            resultant.theta = self.theta + TWO_PI/4
+            theta = self.theta + TWO_PI/4
 
         resultant.mag = (y ** 2 + x ** 2) ** 0.5
+        resultant.theta = theta
         return resultant
-
-
-def add_two_dimensions(value1, magnitude1, value2, magnitude2):
-    # x and y components are flipped for visualizing the vectors on a clock style circle with 0 at the top
-    x = magnitude1*cos[value1] + magnitude2*cos[value2]
-    y = magnitude1*sin[value1] + magnitude2*sin[value2]
-
-    if x == 0:
-        if y > 0:
-            result = (TWO_PI/4)
-        else:
-            result = (TWO_PI*(3.0/4))
-    else:
-        result = atan(abs(y/x))
-
-    if y < 0 < x:
-        result = TWO_PI - result
-    elif y < 0 and x < 0:
-        result = TWO_PI / 2 + result
-    elif x < 0 < y:
-        result = TWO_PI / 2 - result
-
-    if x == 0 and y == 0:
-        # insert the chance logic
-        result = atan(sin[value1]/cos[value1]) + TWO_PI / 4
-
-    magnitude = (value1**2+value2**2)**.5
-
-    return round(result / delta_theta) % _axis_length, magnitude
+#
+#
+# def add_two_dimensions(value1, magnitude1, value2, magnitude2):
+#     # x and y components are flipped for visualizing the vectors on a clock style circle with 0 at the top
+#     x = magnitude1*cos[value1] + magnitude2*cos[value2]
+#     y = magnitude1*sin[value1] + magnitude2*sin[value2]
+#
+#     if x == 0:
+#         if y > 0:
+#             result = (TWO_PI/4)
+#         else:
+#             result = (TWO_PI*(3.0/4))
+#     else:
+#         result = atan(abs(y/x))
+#
+#     if y < 0 < x:
+#         result = TWO_PI - result
+#     elif y < 0 and x < 0:
+#         result = TWO_PI / 2 + result
+#     elif x < 0 < y:
+#         result = TWO_PI / 2 - result
+#
+#     if x == 0 and y == 0:
+#         # insert the chance logic
+#         result = atan(sin[value1]/cos[value1]) + TWO_PI / 4
+#
+#     magnitude = (value1**2+value2**2)**.5
+#
+#     return round(result / delta_theta) % _axis_length, magnitude
 
 # Check add operation
 # for a, b in itertools.combinations(range(16), 2):
@@ -134,8 +150,13 @@ class MCRVector(object):
 
     def __init__(self, dims, factor=1., _mag=np.array([1]*ndim), group_list=[]):
         if len(dims) != ndim:
-            raise ValueError
-        self._dims = dims
+            raise ValueError('Invalid length of vector')
+
+        if not isinstance(dims, np.ndarray):
+            self._dims = np.array(dims)
+        else:
+            self._dims = dims
+
         self._factor = factor
         self._magnitudes_internal = _mag
         self._group_list = group_list
@@ -174,7 +195,8 @@ class MCRVector(object):
             mcrR.append(0)
             values = [Vector(mcr[i]) for mcr in mcrs]
             mcrR[i] = (sum(values)).value % _axis_length
-        return mcrR
+        result = MCRVector(mcrR, group_list=mcrs)
+        return result
 
     def __radd__(self, other):
         if other == 0:
@@ -194,8 +216,7 @@ class MCRVector(object):
             new_group.extend(other._group_list)
         else:
             new_group.append(other)
-        result = MCRVector(np.array(MCRVector._addMCR(new_group)), group_list=new_group)
-        return result
+        return MCRVector._addMCR(new_group)
 
     def __mod__(self, other):
         return MCRVector.distance_between(self, other)
@@ -205,6 +226,16 @@ class MCRVector(object):
 
     def distance(self, other):
         return MCRVector.distance_between(self, other)
+
+    def probe(self, other):
+        if len(self._group_list)>20 or len(other._group_list)>20:
+            warnings.warn('Only tested for maximum goup size of 21')
+
+        return self%other<exp_dist-5*exp_dist_std
+
+    def __contains__(self, item):
+        return self.probe(item)
+
 
     @staticmethod
     def distance_between(x, y):
@@ -308,7 +339,7 @@ class IntegerSDM(object):
     @classmethod
     def access_sphere_radius(cls, ndim=ndim, r=r):
         # phi_inv = scipy.stats.norm.ppf(0.001) the calculation used below
-        phi_inv = -3.0902323061678132  # for p=0.001 phi_inv(p) = -3.0902...
+        phi_inv = -3.0902323061678132  # for p=0.001 phi_inv(p) = -3.0902... , where p is the proportion of hard locations enclosed
         r_ = _axis_length
         access_sphere_radius = ((ndim*(r_**2+8)/48)**.5)*phi_inv+((ndim*r_)/4)
         return access_sphere_radius
@@ -420,35 +451,35 @@ class NPIntegerSDM(IntegerSDM):
         in_radius = distances < radius
         locations = np.where(in_radius)
         return [self.hard_locations[location] for location in locations[0]]
-
-class TFIntegerSDM(IntegerSDM):
-
-    import tensorflow as tf
-    def __init__(self, n_hard_locations):
-        super(TFIntegerSDM, self).__init__(n_hard_locations)
-        hard_locations = np.array([location.dims for location in self.hard_locations])
-        graph = tf.Graph()
-        with graph.as_default():
-            self._hard_locations_tensor = tf.constant(hard_locations)
-            self._query_vector = tf.placeholder(dtype=tf.int32, shape=(ndim))
-            self._query_radius = tf.placeholder(dtype=tf.int32)
-            mod1_diff = (self._hard_locations_tensor-self._query_vector) % _axis_length
-            mod2_diff = (self._query_vector-self._hard_locations_tensor) % _axis_length
-            min_diff = tf.minimum(mod1_diff, mod2_diff)
-            distances = tf.reduce_sum(min_diff, axis=1)
-            in_radius = distances < self._query_radius
-            self._locations = tf.where(in_radius)
-        self._distance_checker = tf.Session(graph=graph)
-
-    def hard_locations_in_radius(self, vector, radius=-1):
-        if not isinstance(vector, MCRVector):
-            raise ValueError('Input vector must be an object of MCRVector')
-        if radius == -1:
-            radius = self.access_sphere_radius
-
-        locations = self._distance_checker.run(self._locations, feed_dict={self._query_vector: vector.dims,
-                                                                           self._query_radius: radius})
-        return [self.hard_locations[location_index[0]] for location_index in locations]
+#
+# class TFIntegerSDM(IntegerSDM):
+#
+#     import tensorflow as tf
+#     def __init__(self, n_hard_locations):
+#         super(TFIntegerSDM, self).__init__(n_hard_locations)
+#         hard_locations = np.array([location.dims for location in self.hard_locations])
+#         graph = tf.Graph()
+#         with graph.as_default():
+#             self._hard_locations_tensor = tf.constant(hard_locations)
+#             self._query_vector = tf.placeholder(dtype=tf.int32, shape=(ndim))
+#             self._query_radius = tf.placeholder(dtype=tf.int32)
+#             mod1_diff = (self._hard_locations_tensor-self._query_vector) % _axis_length
+#             mod2_diff = (self._query_vector-self._hard_locations_tensor) % _axis_length
+#             min_diff = tf.minimum(mod1_diff, mod2_diff)
+#             distances = tf.reduce_sum(min_diff, axis=1)
+#             in_radius = distances < self._query_radius
+#             self._locations = tf.where(in_radius)
+#         self._distance_checker = tf.Session(graph=graph)
+#
+#     def hard_locations_in_radius(self, vector, radius=-1):
+#         if not isinstance(vector, MCRVector):
+#             raise ValueError('Input vector must be an object of MCRVector')
+#         if radius == -1:
+#             radius = self.access_sphere_radius
+#
+#         locations = self._distance_checker.run(self._locations, feed_dict={self._query_vector: vector.dims,
+#                                                                            self._query_radius: radius})
+#         return [self.hard_locations[location_index[0]] for location_index in locations]
 
 pam = IntegerSDM(100000)
 
@@ -478,12 +509,6 @@ def example1():
     print(v1.distance(sita))
     print(cake.distance(sita))
 
-def analogy(a1, a2, b1):
-    concept = a1*(~a2)
-    concept = pam.read(concept)
-    term = b1*(~concept)
-    term = pam.read(term)
-    return term, concept
 
 def create():
     v = MCRVector.random_vector()
@@ -499,17 +524,4 @@ if __name__ == '__main__':
     sith = create()
     villian = create()
     hero = create()
-
-    avengers = thanos*villian + scarlett_witch*hero
-
-    star_wars = sith*villian + luke*hero
-
-    term = analogy(avengers, thanos, star_wars)
-
-    term[0].distance(luke)
-    term[0].distance(sith)
-
-
-
-
 
