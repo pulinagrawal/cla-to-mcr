@@ -1,10 +1,11 @@
 
-region_size = 100
+region_size = 1000
 region_sparsity = .02
 
-test_size = 12
+test_size = 100
 
 import convert as conv
+import tqdm
 import numpy as np
 import isdm
 
@@ -13,15 +14,14 @@ def generate_random_mcrs(number, size):
 
 def to_mcr(sdrs, convSet):
     mcrs = []
-    for sdr in sdrs:
+    for sdr in tqdm.tqdm(sdrs):
         v = conv.sparsify(sdr)
         sel_conv_set = [convSet[i] for i in v]
-        mcrs.append(sum(sel_conv_set[1:], sel_conv_set[0]))
+        mcrs.append(sum(sel_conv_set))
 
     return mcrs
 
 sdrs = conv.generateCLAVector(test_size, region_size, region_sparsity)
-print(sdrs)
 
 convSet = [isdm.MCRVector.random_vector() for i in range(region_size)]
 mcrs = to_mcr(sdrs, convSet)
@@ -35,6 +35,10 @@ def avg_mcrs_dist(mcrs):
     return np.mean(dist)
 
 print('Tests if different vectors when converted are far apart')
+print('avg distance between sdrs')
+m_sdrs = [ isdm.MCRVector(sdr) for sdr in sdrs ]
+print(avg_mcrs_dist(m_sdrs))
+print('avg distance between mcrs')
 print(avg_mcrs_dist(mcrs))
 print(avg_mcrs_dist(convSet))
 print(isdm.IntegerSDM.access_sphere_radius())
