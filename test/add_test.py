@@ -1,4 +1,4 @@
-from src.isdm import MCRVector,Vector
+from src.isdm import MCRVector,ModularDimension
 
 vecs = [ MCRVector.random_vector() for _ in range(10) ]
 
@@ -11,7 +11,7 @@ vecs = [ MCRVector.random_vector() for _ in range(10) ]
 
 problem = [3,7,10,13,1,2,8,4,13,3]
 
-values = [Vector(v) for v in problem]
+values = [ModularDimension(v) for v in problem]
 r = values[0]
 for v in range(1,len(values)):
     r = r+values[v]

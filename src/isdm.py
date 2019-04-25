@@ -18,22 +18,28 @@ try:
 except NameError:
     FileExistsError = IOError
 
-
-
-r = (0, 15)
-ndim = 1024
-exp_dist = ndim*(r[1]-r[0]+1)/4
-exp_dist_std = (ndim*((((r[1]-r[0]+1)**2)+8)/48))**0.5
-memory_location = 'pam1'
-
-
-_axis_length = r[1]-r[0]+1
-r_max = r[1]
-r_min = r[0]
 TWO_PI = 44.0/7
-delta_theta = TWO_PI / _axis_length
-same_vector_distance_threshold = ndim/10
 
+def configure(n=1024, r_range=(0,15), contains_std_threshold=5, loc_name='pam'):
+    global r, ndim, exp_dist, exp_dist_std, memory_location, _axis_length
+    global memory_location, r_min, r_max, delta_theta
+    global contains_threshold, same_vector_distance_threshold
+
+    r = r_range
+    ndim = n
+    exp_dist = ndim*(r[1]-r[0]+1)/4
+    exp_dist_std = (ndim*((((r[1]-r[0]+1)**2)+8)/48))**0.5
+    memory_location = loc_name
+
+
+    _axis_length = r[1]-r[0]+1
+    r_max = r[1]
+    r_min = r[0]
+    delta_theta = TWO_PI / _axis_length
+    same_vector_distance_threshold = ndim/10
+    contains_threshold = contains_std_threshold
+
+configure(1024)
 
 def set_modularity(new_r):
     global r, _axis_length, r_max, r_min
@@ -53,12 +59,21 @@ sin = dict([(key, np.sin(key * delta_theta)) for key in range(_axis_length)])
 cos = dict([(key, np.cos(key * delta_theta)) for key in range(_axis_length)])
 
 
-class Vector:
+class ModularDimension(object):
 
 
     def __init__(self, val):
         self.mag = 1
         self.theta = val * delta_theta
+        self.value = val
+
+    @classmethod
+    def from_polar(cls, mag, theta):
+        value = round(theta/delta_theta) % _axis_length
+        obj = cls(value)
+        obj.mag = mag
+        obj.theta = theta
+        return obj
 
     @property
     def theta(self):
@@ -68,6 +83,14 @@ class Vector:
     def theta(self, theta_value):
         self.__theta = theta_value
         self.value = round(theta_value/delta_theta) % _axis_length
+
+    @property
+    def value(self):
+        return self.__value
+
+    @value.setter
+    def value(self, v):
+        self.__value = v
 
     def set_vector(self, val):
         self.mag = 1
@@ -84,7 +107,7 @@ class Vector:
             return self+other
 
     def __add__(self, v):
-        resultant = Vector(0)
+        resultant = ModularDimension(0)
         y = v.mag * math.sin(v.theta) + self.mag * math.sin(self.theta)
         x = v.mag * math.cos(v.theta) + self.mag * math.cos(self.theta)
         if x == 0:
@@ -193,7 +216,7 @@ class MCRVector(object):
         mcrR = list()
         for i in range(np.size(mcrs[0])):
             mcrR.append(0)
-            values = [Vector(mcr[i]) for mcr in mcrs]
+            values = [ModularDimension(mcr[i]) for mcr in mcrs]
             mcrR[i] = (sum(values)).value % _axis_length
         result = MCRVector(mcrR, group_list=mcrs)
         return result
@@ -228,10 +251,10 @@ class MCRVector(object):
         return MCRVector.distance_between(self, other)
 
     def probe(self, other):
-        if len(self._group_list)>20 or len(other._group_list)>20:
+        if len(self._group_list) > 20 or len(other._group_list) > 20:
             warnings.warn('Only tested for maximum goup size of 21')
 
-        return self%other<exp_dist-5*exp_dist_std
+        return (self % other) < (exp_dist-contains_threshold*exp_dist_std)
 
     def __contains__(self, item):
         return self.probe(item)
